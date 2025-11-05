@@ -1,0 +1,116 @@
+{
+	"companions": [
+		{
+			"id": 1,
+			"name": "Catalina",
+			"age": "19 Years",
+			"image": "/girlfriend/catelina.png?height=400&width=300",
+			"message": "Care to join me for a shower?",
+			"isOnline": true
+		},
+		{
+			"id": 2,
+			"name": "Aaliyah",
+			"age": "20 Years",
+			"image": "/girlfriend/aaliyah.png?height=400&width=300",
+			"message": "I love deep conversations...",
+			"isOnline": true
+		},
+		{
+			"id": 3,
+			"name": "Christina",
+			"age": "21 Years",
+			"image": "/girlfriend/christina.png?height=400&width=300",
+			"message": "Sophisticated and elegant",
+			"isOnline": false
+		},
+		{
+			"id": 4,
+			"name": "Nari",
+			"age": "28 Years",
+			"image": "/girlfriend/nari.png?height=400&width=300",
+			"message": "Think you can handle me?",
+			"isOnline": true
+		},
+		{
+			"id": 5,
+			"name": "Mariana",
+			"age": "22 Years",
+			"image": "/girlfriend/mariana.png?height=400&width=300",
+			"message": "Adventure awaits us",
+			"isOnline": true
+		},
+		{
+			"id": 6,
+			"name": "Bianca",
+			"age": "24 Years",
+			"image": "/girlfriend/bianca.png?height=400&width=300",
+			"message": "Mysterious and alluring",
+			"isOnline": false
+		},
+		{
+			"id": 7,
+			"name": "Sofia",
+			"age": "20 Years",
+			"image": "/girlfriend/sofia.png?height=400&width=300",
+			"message": "Let's explore together",
+			"isOnline": true
+		},
+		{
+			"id": 8,
+			"name": "Ariana",
+			"age": "23 Years",
+			"image": "/girlfriend/ariana.png?height=400&width=300",
+			"message": "Sweet and charming",
+			"isOnline": true
+		},
+		{
+			"id": 9,
+			"name": "Yuki",
+			"age": "21 Years",
+			"image": "/girlfriend/yuki.png?height=400&width=300",
+			"message": "I love to dance and have fun",
+			"isOnline": true
+		},
+		{
+			"id": 10,
+			"name": "Melissa",
+			"age": "23 Years",
+			"image": "/girlfriend/melissa.png?height=400&width=300",
+			"message": "i need a charming partner",
+			"isOnline": true
+		},
+		{
+			"id": 11,
+			"name": "Caleste",
+			"age": "19 Years",
+			"image": "/girlfriend/caleste.png?height=400&width=300",
+			"message": "at your service",
+			"isOnline": true
+		},
+		{
+			"id": 12,
+			"name": "Rebecca",
+			"age": "45 Years",
+			"image": "/girlfriend/rebbeca.png?height=400&width=300",
+			"message": "I love deep conversations...",
+			"isOnline": true
+		},
+		{
+			"id": 13,
+			"name": "savannah",
+			"age": "34 Years",
+			"image": "/girlfriend/savannah.png?height=400&width=300",
+			"message": "I love being wet",
+			"isOnline": true
+		},
+		{
+			"id": 14,
+			"name": "Mia",
+			"age": "20 Years",
+			"image": "/girlfriend/Mia.png?height=400&width=300",
+			"message": "look so cute",
+			"isOnline": true
+		}
+	]
+}
