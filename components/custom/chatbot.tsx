@@ -2,6 +2,13 @@
 
 import type React from "react";
 
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+    SpeechRecognition: any;
+  }
+}
+
 import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +23,7 @@ import {
 	type ChatPerson,
 	type Message,
 } from "@/data/chat-data";
+import { apiClient } from "@/lib/api";
 
 interface Suggestion {
 	id: string;
@@ -42,12 +50,19 @@ const TypewriterText = ({
 	const [displayedText, setDisplayedText] = useState("");
 	const [currentIndex, setCurrentIndex] = useState(0);
 
+	const getTypingDelay = () => {
+		if (text.length > 400) return 5;
+		if (text.length > 220) return 7;
+		if (text.length > 140) return 9;
+		return 12;
+	};
+
 	useEffect(() => {
 		if (currentIndex < text.length) {
 			const timeout = setTimeout(() => {
 				setDisplayedText((prev) => prev + text[currentIndex]);
 				setCurrentIndex((prev) => prev + 1);
-			}, 30);
+			}, getTypingDelay());
 			return () => clearTimeout(timeout);
 		} else if (onComplete) {
 			onComplete();
@@ -63,7 +78,9 @@ export default function Chatbot() {
 	);
 	const [showPersonsList, setShowPersonsList] = useState(false);
 	const [creditTokens, setCreditTokens] = useState(1250);
-	const [messages, setMessages] = useState<Message[]>(initialMessages);
+	const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>({
+		[chatPersons[0].id]: initialMessages,
+	});
 	const [suggestions, setSuggestions] =
 		useState<Suggestion[]>(initialSuggestions);
 	const [showSuggestions, setShowSuggestions] = useState(true);
@@ -71,7 +88,12 @@ export default function Chatbot() {
 	const [inputValue, setInputValue] = useState("");
 	const [isAiTyping, setIsAiTyping] = useState(false);
 	const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
+	const [isListening, setIsListening] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const recognitionRef = useRef<any>(null);
+
+	// Get messages for the currently selected person
+	const messages = messagesMap[selectedPerson.id] || [];
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -81,10 +103,71 @@ export default function Chatbot() {
 		scrollToBottom();
 	}, [messages, isAiTyping]);
 
+	useEffect(() => {
+		if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+			const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+			recognitionRef.current = new SpeechRecognition();
+			recognitionRef.current.continuous = true;
+			recognitionRef.current.interimResults = true;
+			recognitionRef.current.lang = 'en-US';
+
+			recognitionRef.current.onresult = (event: any) => {
+				let finalTranscript = '';
+				let interimTranscript = '';
+
+				for (let i = event.resultIndex; i < event.results.length; i++) {
+					const transcript = event.results[i][0].transcript;
+					if (event.results[i].isFinal) {
+						finalTranscript += transcript;
+					} else {
+						interimTranscript += transcript;
+					}
+				}
+
+				setInputValue(finalTranscript + interimTranscript);
+			};
+
+			recognitionRef.current.onend = () => {
+				setIsListening(false);
+			};
+
+			recognitionRef.current.onerror = (event: any) => {
+				console.error('Speech recognition error:', event.error);
+				setIsListening(false);
+			};
+		}
+
+		return () => {
+			if (recognitionRef.current) {
+				recognitionRef.current.stop();
+			}
+		};
+	}, []);
+
+	const generateAiResponse = async (
+		userMessage: string,
+		personName: string,
+		messageHistory: Message[],
+	): Promise<string> => {
+		try {
+			const HISTORY_LIMIT = 10;
+			const history = messageHistory
+				.filter((msg) => !msg.isTyping)
+				.slice(-HISTORY_LIMIT)
+				.map((msg) => ({ sender: msg.sender, content: msg.content }));
+			const response = await apiClient.chat(userMessage, personName, history);
+			return response.data?.response || "Sorry, I couldn't generate a response right now.";
+		} catch (error) {
+			console.error("Error generating AI response:", error);
+			return "Oops, something went wrong. Let's try again!";
+		}
+	};
+
 	const handleSendMessage = async (messageText?: string) => {
 		const textToSend = messageText || inputValue;
 		if (!textToSend.trim()) return;
 
+		const targetPersonId = selectedPerson.id;
 		const userMessage: Message = {
 			id: Date.now().toString(),
 			content: textToSend,
@@ -92,7 +175,10 @@ export default function Chatbot() {
 			timestamp: new Date(),
 		};
 
-		setMessages((prev) => [...prev, userMessage]);
+		setMessagesMap((prev) => ({
+			...prev,
+			[targetPersonId]: [...(prev[targetPersonId] || []), userMessage],
+		}));
 		setInputValue("");
 		setIsWaitingForResponse(true);
 		setCreditTokens((prev) => Math.max(0, prev - 5)); // Deduct 5 tokens per message
@@ -104,20 +190,32 @@ export default function Chatbot() {
 			);
 		}
 
-		setTimeout(() => {
+		try {
+			const aiContent = await generateAiResponse(
+				textToSend,
+				selectedPerson.name,
+				messages,
+			);
 			setIsWaitingForResponse(false);
 			setIsAiTyping(true);
 
 			const aiResponse: Message = {
 				id: (Date.now() + 1).toString(),
-				content: getRandomAiResponse(),
+				content: aiContent,
 				sender: "ai",
 				timestamp: new Date(),
 				isTyping: true,
 			};
 
-			setMessages((prev) => [...prev, aiResponse]);
-		}, 1000 + Math.random() * 1000);
+			setMessagesMap((prev) => ({
+				...prev,
+				[targetPersonId]: [...(prev[targetPersonId] || []), aiResponse],
+			}));
+		} catch (error) {
+			console.error("Failed to fetch AI response", error);
+			setIsWaitingForResponse(false);
+			setIsAiTyping(false);
+		}
 	};
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -128,11 +226,12 @@ export default function Chatbot() {
 	};
 
 	const handleTypingComplete = (messageId: string) => {
-		setMessages((prev) =>
-			prev.map((msg) =>
+		setMessagesMap((prev) => ({
+			...prev,
+			[selectedPerson.id]: (prev[selectedPerson.id] || []).map((msg: Message) =>
 				msg.id === messageId ? { ...msg, isTyping: false } : msg,
 			),
-		);
+		}));
 		setIsAiTyping(false);
 	};
 
@@ -142,6 +241,18 @@ export default function Chatbot() {
 
 	const closeSuggestions = () => {
 		setShowSuggestions(false);
+	};
+
+	const handleMicClick = () => {
+		if (isListening) {
+			recognitionRef.current?.stop();
+			setIsListening(false);
+		} else {
+			if (recognitionRef.current) {
+				recognitionRef.current.start();
+				setIsListening(true);
+			}
+		}
 	};
 
 	return (
@@ -243,9 +354,9 @@ export default function Chatbot() {
 				</div>
 
 				{/* Chat Area */}
-				<div className="flex-1 flex flex-col w-full">
+				<div className="flex-1 flex flex-col w-full min-w-0">
 					{/* Header */}
-					<div className="bg-[#0a0d1e] border-b border-[#131331] p-4 flex items-center justify-between">
+					<div className="bg-[#0a0d1e] border-b border-[#131331] p-4 flex items-center">
 						<div className="flex items-center gap-3">
 							<div className="relative">
 								<Avatar className="w-10 h-10">
@@ -267,38 +378,6 @@ export default function Chatbot() {
 								<p className="text-sm text-[#626060]">
 									{selectedPerson.isOnline ? "Online" : "Offline"}
 								</p>
-							</div>
-						</div>
-						<div className="flex items-center justify-between mb-4">
-							{/* Token Badge */}
-							<div className="flex items-center bg-[#131331] rounded-full px-2 py-1 space-x-2 shadow-inner">
-								{/* Token Icon */}
-								<div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-full flex items-center justify-center">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										className="h-4 w-4 text-white"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth="2"
-											d="M12 3v1m0 16v1m8.485-8.485l-.707-.707m-13.556 0l-.707.707m16.97 0a9 9 0 11-12.728 0 9 9 0 0112.728 0z"
-										/>
-									</svg>
-								</div>
-
-								{/* Token Count */}
-								<span className="text-white font-semibold text-sm tracking-wide">
-									{creditTokens}
-								</span>
-
-								{/* Add Button */}
-								<button className="w-6 h-6 rounded-full bg-[#1a1a3b] text-white hover:bg-purple-600 flex items-center justify-center text-sm font-bold">
-									+
-								</button>
 							</div>
 						</div>
 					</div>
@@ -401,7 +480,8 @@ export default function Chatbot() {
 							<Button
 								variant="ghost"
 								size="sm"
-								className="text-[#cccccc] hover:text-white p-2"
+								className={`p-2 ${isListening ? 'text-red-500' : 'text-[#cccccc] hover:text-white'}`}
+								onClick={handleMicClick}
 							>
 								<Mic className="w-5 h-5" />
 							</Button>
@@ -564,7 +644,8 @@ export default function Chatbot() {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="text-[#cccccc] hover:text-white p-2"
+									className={`p-2 ${isListening ? 'text-red-500' : 'text-[#cccccc] hover:text-white'}`}
+									onClick={handleMicClick}
 								>
 									<Mic className="w-5 h-5" />
 								</Button>

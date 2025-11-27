@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -371,6 +371,14 @@ class ApiClient {
 
   async getVideoConversionStatus(id: number) {
     return this.request(`/video-conversions/${id}/status`);
+  }
+
+  // Chat endpoint
+  async chat(userMessage: string, companionName: string, history: Array<{ sender: string; content: string }>) {
+    return this.request<{ response: string }>('/chat', {
+      method: 'POST',
+      body: JSON.stringify({ user_message: userMessage, companion_name: companionName, history }),
+    });
   }
 }
 
