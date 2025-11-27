@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://girl-zone-chatbot.vercel.app';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -373,12 +373,60 @@ class ApiClient {
     return this.request(`/video-conversions/${id}/status`);
   }
 
-  // Chat endpoint
-  async chat(userMessage: string, companionName: string, history: Array<{ sender: string; content: string }>) {
-    return this.request<{ response: string }>('/chat', {
-      method: 'POST',
-      body: JSON.stringify({ user_message: userMessage, companion_name: companionName, history }),
-    });
+  // Chat endpoint - calls deployed Vercel API directly
+  // Only userMessage is required, companionName and history are optional
+  async chat(userMessage: string, companionName?: string, history?: Array<{ sender: string; content: string }>) {
+    // Use API_BASE_URL to call the deployed Vercel API directly
+    const url = `${this.baseURL}/api/chat`;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ 
+          user_message: userMessage.trim(), 
+          companion_name: companionName || 'Aria',
+          history: history || []
+        }),
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        const text = await response.text();
+        console.error('Failed to parse API response:', parseError, 'Response text:', text);
+        throw new Error('Invalid response from server');
+      }
+
+      if (!response.ok) {
+        const errorMessage = data.message || data.error || `API request failed with status ${response.status}`;
+        console.error('API request failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: data
+        });
+        throw new Error(errorMessage);
+      }
+
+      // Ensure the response has the expected structure
+      if (!data.success) {
+        throw new Error(data.message || 'API request was not successful');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Chat API request failed:', error);
+      throw error;
+    }
   }
 }
 

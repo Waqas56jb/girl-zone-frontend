@@ -146,17 +146,16 @@ export default function Chatbot() {
 
 	const generateAiResponse = async (
 		userMessage: string,
-		personName: string,
-		messageHistory: Message[],
 	): Promise<string> => {
 		try {
-			const HISTORY_LIMIT = 10;
-			const history = messageHistory
-				.filter((msg) => !msg.isTyping)
-				.slice(-HISTORY_LIMIT)
-				.map((msg) => ({ sender: msg.sender, content: msg.content }));
-			const response = await apiClient.chat(userMessage, personName, history);
-			return response.data?.response || "Sorry, I couldn't generate a response right now.";
+			// Only send user message - API will use default companion_name and empty history
+			const response = await apiClient.chat(userMessage);
+			
+			if (response.success && response.data?.response) {
+				return response.data.response;
+			}
+			
+			return "Sorry, I couldn't generate a response right now.";
 		} catch (error) {
 			console.error("Error generating AI response:", error);
 			return "Oops, something went wrong. Let's try again!";
@@ -191,11 +190,7 @@ export default function Chatbot() {
 		}
 
 		try {
-			const aiContent = await generateAiResponse(
-				textToSend,
-				selectedPerson.name,
-				messages,
-			);
+			const aiContent = await generateAiResponse(textToSend);
 			setIsWaitingForResponse(false);
 			setIsAiTyping(true);
 
