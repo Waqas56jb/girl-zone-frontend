@@ -17,8 +17,8 @@ export default function LoginPage() {
 	const { login } = useAuth();
 	const router = useRouter();
 	const [formData, setFormData] = useState({
-		email: '',
-		password: '',
+		email: "",
+		password: "",
 		remember: false,
 	});
 	const [loading, setLoading] = useState(false);
@@ -33,7 +33,11 @@ export default function LoginPage() {
 
 		setLoading(true);
 		try {
-			const success = await login(formData.email, formData.password);
+			const success = await login(
+				formData.email,
+				formData.password,
+				formData.remember,
+			);
 			if (success) {
 				toast.success('Login successful!');
 				router.push('/generate');
@@ -102,7 +106,9 @@ export default function LoginPage() {
 								<Checkbox 
 									id="remember" 
 									checked={formData.remember}
-									onCheckedChange={(checked) => handleInputChange('remember', checked)}
+									onCheckedChange={(checked) =>
+										handleInputChange("remember", checked === true)
+									}
 								/>
 								<Label htmlFor="remember">Remember me</Label>
 							</div>
