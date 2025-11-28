@@ -5,9 +5,21 @@ import { toast } from 'sonner';
 
 interface User {
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   rememberMe?: boolean;
+  // Legacy dashboard fields kept optional to avoid build failures
+  id?: number;
+  name?: string;
+  avatar?: string;
+  credits?: number;
+  stars?: number;
+  subscription_status?: string;
+  has_premium_subscription?: boolean;
+  subscription_expires_at?: string;
+  language?: string;
+  referral_code?: string;
+  created_at?: string;
 }
 
 interface AuthContextType {
