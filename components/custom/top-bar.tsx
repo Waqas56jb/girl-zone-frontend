@@ -12,6 +12,7 @@ interface TopbarProps {
 export default function Topbar({ title }: TopbarProps) {
 	const { user, logout } = useAuth();
 	const router = useRouter();
+	const starBalance = user?.stars ?? 0;
 
 	const handleLogout = () => {
 		logout();
@@ -30,7 +31,7 @@ export default function Topbar({ title }: TopbarProps) {
 						<div className="flex items-center space-x-2 text-white">
 							<User className="w-4 h-4" />
 							<span className="text-sm font-medium">{user.name}</span>
-							<span className="text-xs text-gray-400">({user.stars} ⭐)</span>
+							<span className="text-xs text-gray-400">({starBalance} ⭐)</span>
 						</div>
 						
 						{/* Logout button */}

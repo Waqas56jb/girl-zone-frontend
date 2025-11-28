@@ -17,6 +17,7 @@ interface StarPackagesProps {
 
 export default function StarPackages({ onClose, onPurchase }: StarPackagesProps) {
   const { user } = useAuth();
+  const starBalance = user?.stars ?? 0;
   const { data: packages = [], loading, error } = useStarPackages() as { data: any[]; loading: boolean; error: string | null };
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
   const [purchasing, setPurchasing] = useState(false);
@@ -168,7 +169,7 @@ export default function StarPackages({ onClose, onPurchase }: StarPackagesProps)
                   <span className="text-white font-medium">Your Stars</span>
                 </div>
                 <div className="text-2xl font-bold text-white">
-                  {user.stars.toLocaleString()}
+                  {starBalance.toLocaleString()}
                 </div>
               </div>
               

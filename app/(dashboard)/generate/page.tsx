@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 // Disable SSR for this page
 export const dynamic = 'force-dynamic';
@@ -80,7 +80,8 @@ export default function GeneratePage() {
 
 	const canAfford = () => {
 		if (!user) return false;
-		return user.stars >= getStarCost();
+		const stars = user.stars ?? 0;
+		return stars >= getStarCost();
 	};
 
 	const handleGenerate = async () => {
@@ -523,7 +524,7 @@ export default function GeneratePage() {
 									</div>
 									{user && (
 										<div className="text-sm text-gray-400">
-											You have {user.stars} stars
+											You have {user.stars ?? 0} stars
 										</div>
 									)}
 								</div>

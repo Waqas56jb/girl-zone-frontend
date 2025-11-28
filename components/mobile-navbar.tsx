@@ -9,6 +9,7 @@ import { LogOut, User } from "lucide-react";
 export function MobileNavbar() {
 	const { user, logout } = useAuth();
 	const router = useRouter();
+	const starBalance = user?.stars ?? 0;
 
 	const handleLogout = () => {
 		logout();
@@ -42,7 +43,7 @@ export function MobileNavbar() {
 						<div className="flex items-center space-x-1 text-white">
 							<User className="w-4 h-4" />
 							<span className="text-xs font-medium">{user.name}</span>
-							<span className="text-xs text-gray-400">({user.stars}⭐)</span>
+							<span className="text-xs text-gray-400">({starBalance}⭐)</span>
 						</div>
 						
 						{/* Logout button */}

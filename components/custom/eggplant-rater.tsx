@@ -18,6 +18,7 @@ interface EggplantRaterProps {
 
 export default function EggplantRater({ onClose, onRatingComplete }: EggplantRaterProps) {
   const { user } = useAuth();
+  const starBalance = user?.stars ?? 0;
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [description, setDescription] = useState('');
@@ -62,7 +63,7 @@ export default function EggplantRater({ onClose, onRatingComplete }: EggplantRat
       return;
     }
 
-    if (user.stars < 45) {
+    if (starBalance < 45) {
       toast.error('You need 45 stars to use the eggplant rater');
       return;
     }
@@ -210,7 +211,7 @@ export default function EggplantRater({ onClose, onRatingComplete }: EggplantRat
             </div>
             {user && (
               <div className="mt-2 text-sm text-gray-400">
-                You have {user.stars} stars available
+                You have {starBalance} stars available
               </div>
             )}
           </div>
@@ -311,7 +312,7 @@ export default function EggplantRater({ onClose, onRatingComplete }: EggplantRat
             
             <Button
               onClick={handleSubmit}
-              disabled={!image || submitting || !user || user.stars < 45}
+              disabled={!image || submitting || !user || starBalance < 45}
               className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
             >
               {submitting ? 'Submitting...' : 'Submit for Rating'}

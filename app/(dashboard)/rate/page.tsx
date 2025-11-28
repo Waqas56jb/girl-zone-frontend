@@ -17,7 +17,8 @@ export default function RaterCard() {
 
 	const canAfford = () => {
 		if (!user) return false;
-		return user.stars >= 45;
+		const stars = user.stars ?? 0;
+		return stars >= 45;
 	};
 
 	return (
@@ -96,7 +97,7 @@ export default function RaterCard() {
 							</div>
 							{user && (
 								<div className="text-sm text-gray-400 mt-1">
-									You have {user.stars} stars available
+									You have {user.stars ?? 0} stars available
 								</div>
 							)}
 						</div>

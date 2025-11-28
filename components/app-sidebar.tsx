@@ -80,6 +80,7 @@ const footerItems = [
 export function AppSidebar() {
 	const { user, logout } = useAuth();
 	const router = useRouter();
+	const starBalance = user?.stars ?? 0;
 
 	const handleLogout = () => {
 		logout();
@@ -173,7 +174,7 @@ export function AppSidebar() {
 										<User className="w-5 h-5" />
 										<div className="flex-1">
 											<div className="text-sm font-medium">{user.name}</div>
-											<div className="text-xs text-gray-400">{user.stars} ⭐</div>
+											<div className="text-xs text-gray-400">{starBalance} ⭐</div>
 										</div>
 									</div>
 								</SidebarMenuItem>
